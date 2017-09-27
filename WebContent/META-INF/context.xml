@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context clearReferencesStopThreads="true">
+
+  
+        
+    <Resource name="jdbc/menlodatasource"
+        auth="Container"
+        type="javax.sql.DataSource"
+        username="user"
+        password="passwd"
+        driverClassName="oracle.jdbc.OracleDriver"
+        factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
+        url="jdbc:oracle:thin:@192.168.xx.xx:xx:QADB"
+        removeAbandoned="true"
+        removeAbandonedTimeout="1200"
+        maxWait="120000"
+        logAbandoned="true"
+        closeMethod="close"/>
+        
+</Context>

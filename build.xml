@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="DbSyncServer"  default="localhost"  basedir=".">
+
+	<property environment="env" />
+	<property name="src.dir" value="src"/>
+	<property name="test.dir" value="unittest"/>
+	<property name="webroot.dir" value="WebContent"/>
+	<property name="meta-inf.dir" value="${webroot.dir}/META-INF"/>
+	<property name="web-inf.dir" value="${webroot.dir}/WEB-INF"/>
+	<property name="classes.dir" value="${web-inf.dir}/classes"/>
+
+	<property name="output.dir" value="build/classes"/>
+	<property name="java.lib.dir" value="${env.JAVA_HOME}/lib" />
+	<property name="tomcat.lib.dir" value="${env.TOMCAT_HOME}/lib"/>
+
+	<property name="junit.lib.dir" value="${web-inf.dir}/lib"/>
+	<property name="project.lib.dir" value="${web-inf.dir}/lib"/>
+
+	<property name="release.dir" value="release"/>
+	<property name="report.dir" value="report"/> 
+	<property name="configuration.dir" value="configuration" />
+	<property name="unittest.configuration.dir" value="${configuration.dir}/unittest" />
+	<property name="unittest2.configuration.dir" value="${configuration.dir}/unittest2" />
+	<property name="bj.master1.dir" value="${configuration.dir}/192.168.8.xx/master" />
+	<!--<property name="bj.master2.dir" value="${configuration.dir}/192.168.8.xx/master2" />-->
+	<property name="bj.master2.dir" value="${configuration.dir}/192.168.8.xx/master" />
+	<property name="bj.slave1.dir" value="${configuration.dir}/192.168.8.xx/slave" />
+	<property name="bj.slave2.dir" value="${configuration.dir}/192.168.8.xx/slave" />
+	<property name="hz.slave1.dir" value="${configuration.dir}/192.168.6.xx/slave" />
+	<property name="hz.slave2.dir" value="${configuration.dir}/192.168.6.xx/slave" />
+	<property name="hz.slave22.dir" value="${configuration.dir}/192.168.6.xx/slave" />
+	
+	
+    <property name="compile.debug" value="true"/>
+    <property name="compile.deprecation" value="true"/>
+    <property name="compile.optimize" value="true"/>
+
+	<target name="clean">
+		<delete dir="${output.dir}"/>
+		<delete dir="${report.dir}"/>
+		<delete dir="${release.dir}"/>
+		<delete dir="${web-inf.dir}/classes"/>
+	</target>
+
+	<path id="classpath">
+        <pathelement location="${output.dir}" />
+         <fileset dir="${java.lib.dir}">
+			   <include name="*.jar" />
+		   </fileset>
+		    <fileset dir="${tomcat.lib.dir}">
+			   <include name="*.jar" />
+		   </fileset>
+		    <fileset dir="${project.lib.dir}">
+			   <include name="**/*.jar" />
+		   </fileset>
+    </path>
+
+	<target name="compilesrc" depends="clean">
+		<mkdir dir="${output.dir}" />
+		<javac srcdir="src" destdir="${output.dir}" includeantruntime="false"
+            deprecation="${compile.deprecation}" debug="${compile.debug}"
+            optimize="${compile.optimize}" encoding="UTF-8">
+
+			<classpath refid="classpath"/>
+		</javac>
+		<copy todir="${web-inf.dir}/classes">
+				<fileset dir="${output.dir}" />
+		</copy>
+	</target>
+
+	<target name="compilejunit" depends="compilesrc">
+        <javac destdir="${output.dir}" debug="${compile.debug}"
+            deprecation="${compile.deprecation}"
+            optimize="${compile.optimize}"
+            includeantruntime="false"
+            encoding="UTF-8">
+
+            <src path="${test.dir}"/>
+            <classpath refid="classpath"/>
+        </javac>        
+    </target>
+
+	 <target name="junitNormal" depends="compilejunit">
+		<mkdir dir="${report.dir}" />
+        <copy todir="${output.dir}">
+            <fileset dir="${web-inf.dir}">
+                <include name="commons-logging.properties"/>
+                <include name="log4j.properties"/>
+            </fileset>
+        </copy>
+	 	
+	 	<copy file="${unittest.configuration.dir}/web.config" tofile="${output.dir}/web.config" overwrite="true"/>
+	 	<copy file="${unittest.configuration.dir}/context.xml" tofile="${meta-inf.dir}/context.xml" overwrite="true"/>
+        <copy file="${unittest.configuration.dir}/web.xml" tofile="${web-inf.dir}/web.xml" overwrite="true"/>
+	 	<copy file="${unittest.configuration.dir}/config.ini" tofile="${output.dir}/config.ini" overwrite="true"/>
+	 		 	
+        <junit printsummary="yes" haltonfailure="yes" maxmemory="1024m">
+			<classpath refid="classpath"/>
+			<formatter type="xml" usefile="true"/>
+            <batchtest fork="yes" todir="${report.dir}"> 
+                <fileset dir="${output.dir}">
+                    <include name="**/*Test.class" />
+                    <exclude name="**/*StressTest*.class"/>
+                </fileset>
+            </batchtest>
+        </junit>
+		 
+		 <junitreport todir="${report.dir}">
+             <fileset dir="${report.dir}" includes="TEST-*.xml"></fileset>
+         </junitreport>
+    </target>
+    
+	<target name="localhost" depends="compilesrc">
+		<copy file="${unittest.configuration.dir}/web.config" tofile="${src.dir}/web.config" overwrite="true"/>
+		<copy file="${unittest.configuration.dir}/config.ini" tofile="${src.dir}/config.ini" overwrite="true"/>
+		<copy file="${unittest.configuration.dir}/context.xml" tofile="${meta-inf.dir}/context.xml" overwrite="true"/>
+		<copy file="${unittest.configuration.dir}/web.xml" tofile="${web-inf.dir}/web.xml" overwrite="true"/>
+		<copy file="${unittest.configuration.dir}/web.config" tofile="${classes.dir}/web.config" overwrite="true"/>
+		<copy file="${unittest.configuration.dir}/config.ini" tofile="${classes.dir}/config.ini" overwrite="true"/>
+		<war destfile="${release.dir}/DbSyncServer.war" basedir="${webroot.dir}" webxml="${web-inf.dir}/web.xml"/>
+		<delete dir="${classes.dir}"/>
+	</target>
+	
+	<target name="bjmaster1" depends="compilesrc">
+			<copy file="${bj.master1.dir}/web.config" tofile="${src.dir}/web.config" overwrite="true"/>
+			<copy file="${bj.master1.dir}/config.ini" tofile="${src.dir}/config.ini" overwrite="true"/>
+			<copy file="${bj.master1.dir}/context.xml" tofile="${meta-inf.dir}/context.xml" overwrite="true"/>
+			<copy file="${bj.master1.dir}/web.xml" tofile="${web-inf.dir}/web.xml" overwrite="true"/>
+			<copy file="${bj.master1.dir}/web.config" tofile="${classes.dir}/web.config" overwrite="true"/>
+			<copy file="${bj.master1.dir}/config.ini" tofile="${classes.dir}/config.ini" overwrite="true"/>
+			<war destfile="${release.dir}/DbSyncServer.war" basedir="${webroot.dir}" webxml="${web-inf.dir}/web.xml"/>
+			<delete dir="${classes.dir}"/>
+	</target>
+	
+	<target name="bjmaster2" depends="compilesrc">
+			<copy file="${bj.master2.dir}/web.config" tofile="${src.dir}/web.config" overwrite="true"/>
+			<copy file="${bj.master2.dir}/config.ini" tofile="${src.dir}/config.ini" overwrite="true"/>
+			<copy file="${bj.master2.dir}/context.xml" tofile="${meta-inf.dir}/context.xml" overwrite="true"/>
+			<copy file="${bj.master2.dir}/web.xml" tofile="${web-inf.dir}/web.xml" overwrite="true"/>
+			<copy file="${bj.master2.dir}/web.config" tofile="${classes.dir}/web.config" overwrite="true"/>
+			<copy file="${bj.master2.dir}/config.ini" tofile="${classes.dir}/config.ini" overwrite="true"/>
+			<war destfile="${release.dir}/DbSyncServer.war" basedir="${webroot.dir}" webxml="${web-inf.dir}/web.xml"/>
+			<delete dir="${classes.dir}"/>
+	</target>
+
+	<target name="bjslave1" depends="compilesrc">
+			<copy file="${bj.slave1.dir}/web.config" tofile="${src.dir}/web.config" overwrite="true"/>
+			<copy file="${bj.slave1.dir}/config.ini" tofile="${src.dir}/config.ini" overwrite="true"/>
+			<copy file="${bj.slave1.dir}/context.xml" tofile="${meta-inf.dir}/context.xml" overwrite="true"/>
+			<copy file="${bj.slave1.dir}/web.xml" tofile="${web-inf.dir}/web.xml" overwrite="true"/>
+			<copy file="${bj.slave1.dir}/web.config" tofile="${classes.dir}/web.config" overwrite="true"/>
+			<copy file="${bj.slave1.dir}/config.ini" tofile="${classes.dir}/config.ini" overwrite="true"/>
+			<war destfile="${release.dir}/DbSyncServer.war" basedir="${webroot.dir}" webxml="${web-inf.dir}/web.xml"/>
+			<delete dir="${classes.dir}"/>
+	</target>
+	
+	<target name="bjslave2" depends="compilesrc">
+			<copy file="${bj.slave2.dir}/web.config" tofile="${src.dir}/web.config" overwrite="true"/>
+			<copy file="${bj.slave2.dir}/config.ini" tofile="${src.dir}/config.ini" overwrite="true"/>
+			<copy file="${bj.slave2.dir}/context.xml" tofile="${meta-inf.dir}/context.xml" overwrite="true"/>
+			<copy file="${bj.slave2.dir}/web.xml" tofile="${web-inf.dir}/web.xml" overwrite="true"/>
+			<copy file="${bj.slave2.dir}/web.config" tofile="${classes.dir}/web.config" overwrite="true"/>
+			<copy file="${bj.slave2.dir}/config.ini" tofile="${classes.dir}/config.ini" overwrite="true"/>
+			<war destfile="${release.dir}/DbSyncServer.war" basedir="${webroot.dir}" webxml="${web-inf.dir}/web.xml"/>
+			<delete dir="${classes.dir}"/>
+	</target>
+	
+	<target name="hzslave1" depends="compilesrc">
+			<copy file="${hz.slave1.dir}/web.config" tofile="${src.dir}/web.config" overwrite="true"/>
+			<copy file="${hz.slave1.dir}/config.ini" tofile="${src.dir}/config.ini" overwrite="true"/>
+			<copy file="${hz.slave1.dir}/context.xml" tofile="${meta-inf.dir}/context.xml" overwrite="true"/>
+			<copy file="${hz.slave1.dir}/web.xml" tofile="${web-inf.dir}/web.xml" overwrite="true"/>
+			<copy file="${hz.slave1.dir}/web.config" tofile="${classes.dir}/web.config" overwrite="true"/>
+			<copy file="${hz.slave1.dir}/config.ini" tofile="${classes.dir}/config.ini" overwrite="true"/>
+			<war destfile="${release.dir}/DbSyncServer.war" basedir="${webroot.dir}" webxml="${web-inf.dir}/web.xml"/>
+			<delete dir="${classes.dir}"/>
+	</target>
+	
+	<target name="hzslave2" depends="compilesrc">
+			<copy file="${hz.slave2.dir}/web.config" tofile="${src.dir}/web.config" overwrite="true"/>
+			<copy file="${hz.slave2.dir}/config.ini" tofile="${src.dir}/config.ini" overwrite="true"/>
+			<copy file="${hz.slave2.dir}/context.xml" tofile="${meta-inf.dir}/context.xml" overwrite="true"/>
+			<copy file="${hz.slave2.dir}/web.xml" tofile="${web-inf.dir}/web.xml" overwrite="true"/>
+			<copy file="${hz.slave2.dir}/web.config" tofile="${classes.dir}/web.config" overwrite="true"/>
+			<copy file="${hz.slave2.dir}/config.ini" tofile="${classes.dir}/config.ini" overwrite="true"/>
+			<war destfile="${release.dir}/DbSyncServer.war" basedir="${webroot.dir}" webxml="${web-inf.dir}/web.xml"/>
+			<delete dir="${classes.dir}"/>
+	</target>
+	
+	<target name="hzslave22" depends="compilesrc">
+			<copy file="${hz.slave22.dir}/web.config" tofile="${src.dir}/web.config" overwrite="true"/>
+			<copy file="${hz.slave22.dir}/config.ini" tofile="${src.dir}/config.ini" overwrite="true"/>
+			<copy file="${hz.slave22.dir}/context.xml" tofile="${meta-inf.dir}/context.xml" overwrite="true"/>
+			<copy file="${hz.slave22.dir}/web.xml" tofile="${web-inf.dir}/web.xml" overwrite="true"/>
+			<copy file="${hz.slave22.dir}/web.config" tofile="${classes.dir}/web.config" overwrite="true"/>
+			<copy file="${hz.slave22.dir}/config.ini" tofile="${classes.dir}/config.ini" overwrite="true"/>
+			<war destfile="${release.dir}/DbSyncServer.war" basedir="${webroot.dir}" webxml="${web-inf.dir}/web.xml"/>
+			<delete dir="${classes.dir}"/>
+	</target>
+	
+	<target name="localhost2" depends="compilesrc">
+			<copy file="${unittest2.configuration.dir}/web.config" tofile="${src.dir}/web.config" overwrite="true"/>
+			<copy file="${unittest2.configuration.dir}/config.ini" tofile="${src.dir}/config.ini" overwrite="true"/>
+			<copy file="${unittest2.configuration.dir}/context.xml" tofile="${meta-inf.dir}/context.xml" overwrite="true"/>
+			<copy file="${unittest2.configuration.dir}/web.xml" tofile="${web-inf.dir}/web.xml" overwrite="true"/>
+			<copy file="${unittest2.configuration.dir}/web.config" tofile="${classes.dir}/web.config" overwrite="true"/>
+			<copy file="${unittest2.configuration.dir}/config.ini" tofile="${classes.dir}/config.ini" overwrite="true"/>
+			<war destfile="${release.dir}/DbSyncServer.war" basedir="${webroot.dir}" webxml="${web-inf.dir}/web.xml"/>
+			<delete dir="${classes.dir}"/>
+		</target>
+
+	
+</project>

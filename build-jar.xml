@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="DbSyncServer"  default="build"  basedir=".">
+
+	<property environment="env" />
+	<property name="src.dir" value="src"/>
+	<property name="test.dir" value="unittest"/>
+	<property name="webroot.dir" value="WebContent"/>
+	<property name="meta-inf.dir" value="${webroot.dir}/META-INF"/>
+	<property name="web-inf.dir" value="${webroot.dir}/WEB-INF"/>
+	<property name="classes.dir" value="${web-inf.dir}/classes"/>
+
+	<property name="output.dir" value="build/classes"/>
+	<property name="java.lib.dir" value="${env.JAVA_HOME}/lib" />
+	<property name="tomcat.lib.dir" value="${env.TOMCAT_HOME}/lib"/>
+
+	<property name="junit.lib.dir" value="${web-inf.dir}/lib"/>
+	<property name="project.lib.dir" value="${web-inf.dir}/lib"/>
+
+	<property name="release.dir" value="release"/>
+	<property name="report.dir" value="report"/> 
+	<property name="configuration.dir" value="configuration" />
+	<property name="unittest.configuration.dir" value="${configuration.dir}/unittest" />
+	<property name="192.168.6.77.configuration.dir" value="${configuration.dir}/192.168.6.77" />
+	<property name="stresstest.configuration.dir" value="${configuration.dir}/stresstest" />
+	
+    <property name="compile.debug" value="true"/>
+    <property name="compile.deprecation" value="true"/>
+    <property name="compile.optimize" value="false"/>
+
+	<target name="clean">
+		<delete dir="${output.dir}"/>
+		<delete dir="${report.dir}"/>
+		<delete dir="${release.dir}"/>
+		<delete dir="${web-inf.dir}/classes"/>
+	</target>
+
+	<path id="classpath">
+        <pathelement location="${output.dir}" />
+         <fileset dir="${java.lib.dir}">
+			   <include name="*.jar" />
+		   </fileset>
+		    <fileset dir="${tomcat.lib.dir}">
+			   <include name="*.jar" />
+		   </fileset>
+		    <fileset dir="${project.lib.dir}">
+			   <include name="**/*.jar" />
+		   </fileset>
+    </path>
+
+	<target name="compilesrc" depends="clean">
+		<mkdir dir="${output.dir}" />
+		<javac srcdir="src" destdir="${output.dir}" includeantruntime="false"
+            deprecation="${compile.deprecation}" debug="${compile.debug}"
+            optimize="${compile.optimize}" encoding="UTF-8">
+
+			<classpath refid="classpath"/>
+		</javac>
+		<copy todir="${output.dir}">
+				<fileset dir="${web-inf.dir}/lib" />
+		</copy>
+	</target>
+
+	<target name="build" depends="compilesrc">
+		<jar destfile="${release.dir}/dbsyncproxy.jar" basedir="${output.dir}" />
+	</target>
+	
+</project>
